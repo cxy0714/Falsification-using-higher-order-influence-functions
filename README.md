@@ -18,7 +18,7 @@ Here we provide the code to reproduce the analysis described in:
 - `process_outputs.R` — R file which reproduces the tables and figures displayed in the main text, summarizing simulation results. 
 - `process_outputs_supplement.R` — R file which reproduces the tables and figures displayed in the supplement, summarizing simulation results.
 - `src`  — Folder containing scripts with functions and dependencies to be called by the above files.
-- `params`  — Folder to which simulation parameters, which are outputs of `create_simulation_parameters...`, are saved.
+- `params`  — Folder should be created to which simulation parameters, which are outputs of `create_simulation_parameters...`, are saved.
 - `output`  — Folder to which simulation outputs are saved.
 - `figures`  — Folder containing figures, which are outputs of `process_outputs.R` and `process_outputs_supplement.R`.
 

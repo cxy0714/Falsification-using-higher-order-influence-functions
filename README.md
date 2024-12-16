@@ -1,3 +1,15 @@
+# HOIF Estimator Computation Update
+
+---
+
+### **Update - 2024-12-16** 📢
+
+The higher-order (now up to **the fifth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the **"HOIF_function"** folder. 
+
+---
+
+
+
 # Falsification using higher order influence functions for double machine learning estimators of causal effects
 
 # Introduction

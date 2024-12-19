@@ -10,14 +10,15 @@ library("SMUT") # for efficient matrix multiplication via eigenMapMatMult()
 # Vector_2: a n-dimensional vector containing the outcome residuals (like (y - b),here no A-weighted)
 # weight : a n-dimensional vector containing the treatment for Weight-ed Gram matrix ( like A or (1-A) )
 # basis: a n*p matrix containing the basis transformations of the confounder.
-# Split: a logistic variable, 
-#        Split == 1 means using sample split to compute the Omega_hat (eHOIF),
-#        Split == 0 means using whole sample to compute the Omega_hat (sHOIF).
+# order: number of estimators, default value is 6. only can be 2 or 3 or 4 or 5 or 6.
+# Split: a logistic variable, default value is 0.
+#        Split== 1 means using sample Splitto compute the Omega_hat (eHOIF),
+#        Split== 0 means using whole sample to compute the Omega_hat (sHOIF).
 ################################################################################
-compute_HOIF_general_all_U <- function(Vector_1, Vector_2, weight, basis, Split) {
+compute_HOIF_general_all_U <- function(Vector_1, Vector_2, weight, basis, order = 6, Split= 0) {
   n <- length(Vector_1)
   
-  if ( Split == 0) {
+  if ( Split== 0) {
     basis_weight <- basis * weight
     t_basis_weight <- t(basis_weight)
     Mat <- eigenMapMatMult(t_basis_weight, basis)
@@ -28,27 +29,27 @@ compute_HOIF_general_all_U <- function(Vector_1, Vector_2, weight, basis, Split)
     Ker <- eigenMapMatMult(eigenMapMatMult(basis, Omega_mat), t_basis_weight)
     
     U_list <- list()
-    results <- calculate_u_statistics(Vector_1 = Vector_1, Vector_2 = Vector_2, A1 = Ker, A2 = Ker, A3 = Ker, A4 = Ker)
+    results <- calculate_u_statistics_six(Vector_1 = Vector_1, Vector_2 = Vector_2, A1 = Ker, A2 = Ker, A3 = Ker, A4 = Ker, A5 = Ker)
     
-    for (i in 2:(5)) {
+    for (i in 2:(order)) {
       U_list[[paste0("U_", i)]] <- (-1)^i * results[[i-1]]
     }
     
     
-    BD_list <- Buildingblock_sum_HOIF(U_list, order = 5)
+    BD_list <- Buildingblock_sum_HOIF(U_list, order = order)
     
     return_list <- c(BD_list, U_list)
     return_list <- combine_results(sHOIF = return_list)
-  } else if ( Split == 1) {
+  } else if ( Split== 1) {
     
     
-    # Split indices into two halves: a and b
+    # Splitindices into two halves: a and b
     indices <- seq_len(n)
     set.seed(123)  # For reproducibility
     indices_a <- sample(indices, round(n / 2))
     indices_b <- setdiff(indices, indices_a)
     
-    # Split basis, weight, Vector_1, Vector_2
+    # Splitbasis, weight, Vector_1, Vector_2
     basis_a <- basis[indices_a, ]
     basis_b <- basis[indices_b, ]
     weight_a <- weight[indices_a]
@@ -67,18 +68,18 @@ compute_HOIF_general_all_U <- function(Vector_1, Vector_2, weight, basis, Split)
     Ker_ab <- eigenMapMatMult(eigenMapMatMult(basis_b, Omega_mat_a), t(basis_weight_a))
     
     # Compute results using Ker_ab and Vector_1_b, Vector_2_b
-    results_ab <- calculate_u_statistics(Vector_1 = Vector_1_b, Vector_2 = Vector_2_b, 
-                                         A1 = Ker_ab, A2 = Ker_ab, A3 = Ker_ab, A4 = Ker_ab)
+    results_ab <- calculate_u_statistics_six(Vector_1 = Vector_1_b, Vector_2 = Vector_2_b, 
+                                         A1 = Ker_ab, A2 = Ker_ab, A3 = Ker_ab, A4 = Ker_ab,A5 = Ker_ab)
     
     U_list_ab <- list()
-    for (i in 2:5) {
+    for (i in 2:order) {
       U_list_ab[[paste0("U_", i)]] <- (-1)^i * results_ab[[i - 1]]
     }
     
-    BD_list_ab <- Buildingblock_sum_HOIF(U_list_ab, order = 5)
+    BD_list_ab <- Buildingblock_sum_HOIF(U_list_ab, order = order)
     return_list_ab <- c(BD_list_ab, U_list_ab)
     
-    # Combine results for SH-OIF (split a -> b)
+    # Combine results for SH-OIF (Splita -> b)
     return_list_ab <- combine_results(eHOIF = return_list_ab)
     
     # Repeat the process, swapping a and b
@@ -90,15 +91,15 @@ compute_HOIF_general_all_U <- function(Vector_1, Vector_2, weight, basis, Split)
     
     Ker_ba <- eigenMapMatMult(eigenMapMatMult(basis_a, Omega_mat_b), t(basis_weight_b))
     
-    results_ba <- calculate_u_statistics(Vector_1 = Vector_1[indices_a], Vector_2 = Vector_2[indices_a], 
-                                         A1 = Ker_ba, A2 = Ker_ba, A3 = Ker_ba, A4 = Ker_ba)
+    results_ba <- calculate_u_statistics_six(Vector_1 = Vector_1[indices_a], Vector_2 = Vector_2[indices_a], 
+                                         A1 = Ker_ba, A2 = Ker_ba, A3 = Ker_ba, A4 = Ker_ba, A5 = Ker_ba)
     
     U_list_ba <- list()
-    for (i in 2:5) {
+    for (i in 2:order) {
       U_list_ba[[paste0("U_", i)]] <- (-1)^i * results_ba[[i - 1]]
     }
     
-    BD_list_ba <- Buildingblock_sum_HOIF(U_list_ba, order = 5)
+    BD_list_ba <- Buildingblock_sum_HOIF(U_list_ba, order = order)
     return_list_ba <- c(BD_list_ba, U_list_ba)
     
     return_list_ba <- combine_results(eHOIF = return_list_ba)
@@ -121,15 +122,15 @@ compute_HOIF_general_all_U <- function(Vector_1, Vector_2, weight, basis, Split)
 # weight : a n-dimensional vector containing the treatment for Weight-ed Gram matrix ( like A or (1-A) )
 # basis: a n*p matrix containing the basis transformations of the confounder.
 # order: number of estimators.
-# Split: a logistic variable, 
-#        Split == 1 means using sample split to compute the Omega_hat (eHOIF),
-#        Split == 0 means using whole sample to compute the Omega_hat (sHOIF).
+# Split: a logistic variable, default value is 0.
+#        Split== 1 means using sample Splitto compute the Omega_hat (eHOIF),
+#        Split== 0 means using whole sample to compute the Omega_hat (sHOIF).
 ################################################################################
-compute_HOIF_general_part_U <- function(Vector_1, Vector_2, weight, basis, order, split) {
+compute_HOIF_general_part_U <- function(Vector_1, Vector_2, weight, basis, order, Split= 0) {
   n <- length(Vector_1)
   
-  if (split == 0) {
-    # Original implementation for split == 0
+  if (Split== 0) {
+    # Original implementation for Split== 0
     basis_weight <- basis * weight
     t_basis_weight <- t(basis_weight)
     Mat <- eigenMapMatMult(t_basis_weight, basis)
@@ -152,13 +153,13 @@ compute_HOIF_general_part_U <- function(Vector_1, Vector_2, weight, basis, order
     return_list <- c(BD_list, U_list)
     return_list <- combine_results(sHOIF = return_list)
     
-  } else if (split == 1) {
-    # Sample-split implementation for split == 1
-    # Split indices into two halves: a and b
+  } else if (Split== 1) {
+    # Sample-Splitimplementation for Split== 1
+    # Splitindices into two halves: a and b
     idx_a <- sample(1:n, size = round(n / 2), replace = FALSE)
     idx_b <- setdiff(1:n, idx_a)
     
-    # Split basis, weight, Vector_1, and Vector_2
+    # Splitbasis, weight, Vector_1, and Vector_2
     basis_a <- basis[idx_a, , drop = FALSE]
     basis_b <- basis[idx_b, , drop = FALSE]
     weight_a <- weight[idx_a]
@@ -266,42 +267,66 @@ Buildingblock_sum_HOIF <- function(U_list, order, fplugin = 0) {
 }
 ################################################################################
 # Main body function in compute_HOIF_general_all_U()
-# Computes and return 4 building_block estimators from 2-th HOIF to 5-th U-statistics.
+# Computes and return 4 building_block estimators from 2-th HOIF to 6-th U-statistics.
 # \bbU_{n, m}^{\mathsf{all}} \biggl[ f(O_{i_1}, \ldots, O_{i_m}) \biggr] = \frac{1}{\binom{n}{m} \factorial{m} } \sum_{i_1 \ne i_2 \ne \ldots \ne i_m} f(O_{i_1}, \ldots, O_{i_m})
 ################################################################################
-calculate_u_statistics <- function(Vector_1, Vector_2, A1, A2 , A3, A4) {
+calculate_u_statistics_six <- function(Vector_1, Vector_2, A1, A2 , A3, A4, A5) {
   # Ensure input matrices are square and of the same size
   n <- nrow(A1)
-  if (!(nrow(A2) == n && nrow(A3) == n && nrow(A4) == n)) {
+  if (!(nrow(A2) == n &&
+        nrow(A3) == n && nrow(A4) == n && nrow(A5) == n)) {
     stop("All input matrices must be square and of the same size")
   }
+  
   # Precompute no_diag matrices to avoid recomputation
   no_diag_A1 <- no_diag(A1)
   no_diag_A2 <- no_diag(A2)
   no_diag_A3 <- no_diag(A3)
   no_diag_A4 <- no_diag(A4)
+  no_diag_A5 <- no_diag(A5)
   
-  # Calculate Kernel matrices for different orders
+  Ker_1234 <-  calculate_u_Ker_5(A1, A2, A3, A4)
+  Ker5 <- Ker_1234$Ker5
+  Ker4 <- Ker_1234$Ker4
+  Ker3 <- Ker_1234$Ker3
+  Ker2 <- Ker_1234$Ker2
   
-  # Kernel matrix for 2nd order
-  Ker2 <- A1
+  # Calculate Sub matrices for 6th order
+  # Sub matrix for i2 = i6
+  Ker_2345 <- calculate_u_Ker_5(A2, A3, A4, A5)
+  Ker5_2345 <- Ker_2345$Ker5
+  Ker4_234 <- Ker_2345$Ker4
   
-  # Kernel matrix for 3rd order
-  Ker3 <- eigenMapMatMult(no_diag_A1, no_diag_A2)
+  Ker_345 <- calculate_u_Ker_4(A3, A4, A5)
+  Ker4_345 <- Ker_345$Ker4
   
-  # Kernel matrix for 4th order
-  Ker4 <- eigenMapMatMult(no_diag(Ker3), no_diag_A3) - 
-    eigenMapMatMult(A1, diag_col_sum(t(no_diag_A2) * no_diag_A3)) + 
-    hadamard(hadamard(A1, t(A2)), A3)
+  Sub_6_2 <- eigenMapMatMult(no_diag_A1, diag_Mat(Ker5_2345)) -
+    hadamard(hadamard(no_diag_A1, t(no_diag_A2)), Ker4_345) -
+    hadamard(hadamard(no_diag_A1, t(no_diag(Ker4_234))), no_diag_A5) -
+    hadamard(hadamard(no_diag_A1, eigenMapMatMult(t(no_diag_A3), t(no_diag_A2))),eigenMapMatMult(no_diag_A4, no_diag_A5)) +
+    hadamard(no_diag_A1, eigenMapMatMult(hadamard(no_diag_A4, t(no_diag_A3)), hadamard(no_diag_A5, t(no_diag_A2))))
   
-  # Kernel matrix for 5th order (more complex)
-  Ker5 <- eigenMapMatMult(no_diag(Ker4), no_diag_A4) - 
-    eigenMapMatMult(no_diag_A1, diag(diag(eigenMapMatMult(eigenMapMatMult(no_diag_A2, no_diag_A3), no_diag_A4)))) +
-    hadamard(hadamard(no_diag_A1, t(no_diag_A2)), eigenMapMatMult(no_diag_A3, no_diag_A4)) +
-    hadamard(hadamard(no_diag_A1, no_diag_A4), eigenMapMatMult(t(no_diag_A3), t(no_diag_A2))) -
-    eigenMapMatMult(no_diag(eigenMapMatMult(no_diag_A1, no_diag_A2)), diag(diag(eigenMapMatMult(no_diag_A3, no_diag_A4)))) +
-    eigenMapMatMult(no_diag_A1, no_diag(hadamard(hadamard(no_diag_A2, t(no_diag_A3)), no_diag_A4))) +
-    hadamard(eigenMapMatMult(no_diag_A1, no_diag_A2), hadamard(t(no_diag_A3), no_diag_A4))
+  # Sub matrix for i3 = i6
+  Sub_6_3 <-     eigenMapMatMult(eigenMapMatMult(no_diag_A1, no_diag_A2), diag_Mat(Ker4_345)) -
+    hadamard(hadamard(eigenMapMatMult(no_diag_A1, no_diag_A2), t(no_diag_A3)),eigenMapMatMult(no_diag_A4, no_diag_A5)) -
+    hadamard(  hadamard(eigenMapMatMult(no_diag_A1, no_diag_A2), t(eigenMapMatMult(  no_diag_A3, no_diag_A4  ))), no_diag_A5)-
+    eigenMapMatMult(no_diag_A1, hadamard(  hadamard(no_diag_A2, t(no_diag_A3)),eigenMapMatMult(no_diag_A4, no_diag_A5))) +
+    hadamard(eigenMapMatMult(hadamard(no_diag_A1,t(no_diag_A4)), hadamard(no_diag_A2, t(no_diag_A3))), no_diag_A5) -
+    eigenMapMatMult(no_diag_A1, hadamard(    hadamard(no_diag_A2, no_diag_A5), t(eigenMapMatMult(no_diag_A3, no_diag_A4))  )) +
+    hadamard(t(no_diag_A3), eigenMapMatMult(hadamard(no_diag_A1, no_diag_A4), hadamard(no_diag_A2, no_diag_A5) ))
+  
+  
+  # Sub matrix for i4 = i6
+  Sub_6_4 <-   eigenMapMatMult(Ker4, diag_Mat(eigenMapMatMult(no_diag_A4, no_diag_A5)))-
+    hadamard(Ker4, hadamard(t(no_diag_A4), no_diag_A5)) -
+    eigenMapMatMult(no_diag_A1, hadamard( eigenMapMatMult(no_diag_A2, no_diag_A3), hadamard(t(no_diag_A4), no_diag_A5)) ) +
+    hadamard(no_diag_A3, eigenMapMatMult(hadamard(no_diag_A1, t(no_diag_A2)), hadamard(t(no_diag_A4), no_diag_A5))) -
+    eigenMapMatMult(no_diag_A1,no_diag(eigenMapMatMult(no_diag_A2, hadamard(hadamard( no_diag_A3, t(no_diag_A4)), no_diag_A5)))) + 
+    eigenMapMatMult( diag_col_sum(hadamard(t(no_diag_A1),no_diag_A2)), hadamard(hadamard(no_diag_A3, t(no_diag_A4)),no_diag_A5)) -
+    hadamard(hadamard(hadamard(hadamard(no_diag_A1, t(no_diag_A2)), no_diag_A3), t(no_diag_A4)), no_diag_A5)
+  
+  # Kernel matrix for 6th order
+  Ker6 <- eigenMapMatMult(no_diag(Ker5), no_diag_A5) - Sub_6_2 - Sub_6_3 - Sub_6_4
   
   # Calculate U-statistics
   # For each order, we use the formula from the document
@@ -309,23 +334,26 @@ calculate_u_statistics <- function(Vector_1, Vector_2, A1, A2 , A3, A4) {
   Ker3 <- no_diag(Ker3)
   Ker4 <- no_diag(Ker4)
   Ker5 <- no_diag(Ker5)
+  Ker6 <- no_diag(Ker6)
   
   U2_all <- eigenMapMatMult(eigenMapMatMult(t(Vector_1), Ker2), Vector_2) / (n * (n-1))
   U3_all <- eigenMapMatMult(eigenMapMatMult(t(Vector_1), Ker3), Vector_2) / (n * (n-1) * (n-2))
   U4_all <- eigenMapMatMult(eigenMapMatMult(t(Vector_1), Ker4), Vector_2) / (n * (n-1) * (n-2) * (n-3))
   U5_all <- eigenMapMatMult(eigenMapMatMult(t(Vector_1), Ker5), Vector_2) / (n * (n-1) * (n-2) * (n-3) * (n-4))
+  U6_all <- eigenMapMatMult(eigenMapMatMult(t(Vector_1), Ker6), Vector_2) / (n * (n-1) * (n-2) * (n-3) * (n-4) * (n-5) )
   
   results_list <- list(
-    U2 = U2_all,
-    U3 = U3_all,
-    U4 = U4_all,
-    U5 = U5_all
+    U2 = as.numeric(U2_all),
+    U3 = as.numeric(U3_all),
+    U4 = as.numeric(U4_all),
+    U5 = as.numeric(U5_all),
+    U6 = as.numeric(U6_all)
   )
   # Return a list of U-statistics
   return( results_list)
 }
 ################################################################################
-# Helper funciton for compute_HOIF_general_part_U() thus for compute_HOIF_general_part_U()
+# Helper funciton for compute_HOIF_general_part_U() and compute_HOIF_general_all_U()
 # subtract, add, combine function for list
 ################################################################################
 # Helper function to create no-diagonal matrix
@@ -343,7 +371,76 @@ hadamard <- function(mat1, mat2) {
 diag_col_sum <- function(mat) {
   diag(colSums(mat))
 }
-
+# Helper function for Diag-Column-Sum
+diag_Mat <- function(mat) {
+  diag(diag(mat))
+}
+calculate_u_Ker_4 <- function(A1, A2, A3) {
+  # Ensure input matrices are square and of the same size
+  n <- nrow(A1)
+  if (!(nrow(A2) == n &&
+        nrow(A3) == n)) {
+    stop("All input matrices must be square and of the same size")
+  }
+  
+  # Precompute no_diag matrices to avoid recomputation
+  no_diag_A1 <- no_diag(A1)
+  no_diag_A2 <- no_diag(A2)
+  no_diag_A3 <- no_diag(A3)
+  
+  
+  # Kernel matrix for 2nd order
+  Ker2 <- A1
+  
+  # Kernel matrix for 3rd order
+  Ker3 <- eigenMapMatMult(no_diag_A1, no_diag_A2)
+  
+  # Kernel matrix for 4th order
+  Ker4 <- eigenMapMatMult(no_diag(Ker3), no_diag_A3) -
+    eigenMapMatMult(A1, diag_col_sum(t(no_diag_A2) * no_diag_A3)) +
+    hadamard(hadamard(A1, t(A2)), A3)
+  diag(Ker4) <- diag(eigenMapMatMult(Ker3, no_diag_A3))
+  return(list(
+    Ker2 = Ker2,
+    Ker3 = Ker3,
+    Ker4 = Ker4
+  ))
+}
+calculate_u_Ker_5 <- function(A1, A2, A3, A4) {
+  # Ensure input matrices are square and of the same size
+  n <- nrow(A1)
+  if (!(nrow(A2) == n &&
+        nrow(A3) == n && nrow(A4) == n)) {
+    stop("All input matrices must be square and of the same size")
+  }
+  
+  # Precompute no_diag matrices to avoid recomputation
+  no_diag_A1 <- no_diag(A1)
+  no_diag_A2 <- no_diag(A2)
+  no_diag_A3 <- no_diag(A3)
+  no_diag_A4 <- no_diag(A4)
+  
+  Ker_123 <- calculate_u_Ker_4(A1,A2,A3)
+  Ker4 <-   Ker_123$Ker4
+  Ker3 <-   Ker_123$Ker3
+  Ker2 <-   Ker_123$Ker2
+  
+  # Kernel matrix for 5th order (more complex)
+  Ker5 <- eigenMapMatMult(no_diag(Ker4), no_diag_A4) - 
+    eigenMapMatMult(no_diag_A1, diag(diag(eigenMapMatMult(eigenMapMatMult(no_diag_A2, no_diag_A3), no_diag_A4)))) +
+    hadamard(hadamard(no_diag_A1, t(no_diag_A2)), eigenMapMatMult(no_diag_A3, no_diag_A4)) +
+    hadamard(hadamard(no_diag_A1, no_diag_A4), eigenMapMatMult(t(no_diag_A3), t(no_diag_A2))) -
+    eigenMapMatMult(no_diag(eigenMapMatMult(no_diag_A1, no_diag_A2)), diag(diag(eigenMapMatMult(no_diag_A3, no_diag_A4)))) +
+    eigenMapMatMult(no_diag_A1, no_diag(hadamard(hadamard(no_diag_A2, t(no_diag_A3)), no_diag_A4))) +
+    hadamard(eigenMapMatMult(no_diag_A1, no_diag_A2), hadamard(t(no_diag_A3), no_diag_A4))
+  diag(Ker5) <- diag(eigenMapMatMult(Ker4, no_diag_A4))
+  return(list(
+    Ker2 = Ker2,
+    Ker3 = Ker3,
+    Ker4 = Ker4,
+    Ker5 = Ker5
+  ))
+}
 subtract_lists <- function(list1, list2) {
   if (length(list1) != length(list2)) {
     stop("Lists must be of the same length")
@@ -408,7 +505,7 @@ set.seed(123)
 
 
 n <- 1000
-p <- 100
+p <- 10
 
 mu_x <- 0
 alpha <- rnorm(p, mean = 0, sd = 0.1)
@@ -444,23 +541,24 @@ epsilon_A_0 <- (1 - A) / (1 - propensity_scores) - 1
 epsilon_Y_1 <- Y - Y_pred_1
 epsilon_Y_0 <- Y - Y_pred_0
 
-m <- 6
-
+m_part <- 10
+m_all <- 6
 
 hoif_1_all_shoif <- compute_HOIF_general_all_U(
   Vector_1 = epsilon_A_1,
   Vector_2 = epsilon_Y_1,
   weight = A,
   basis = X,
-  Split = 0
+  order = m_all,
+  Split= 0
 ) 
 hoif_1_part_shoif <- compute_HOIF_general_part_U(
   Vector_1 = epsilon_A_1,
   Vector_2 = epsilon_Y_1,
   weight = A,
   basis = X,
-  order = m,
-  split = 0
+  order = m_part,
+ Split= 0
 )
 
 hoif_1_all_ehoif <- compute_HOIF_general_all_U(
@@ -468,15 +566,16 @@ hoif_1_all_ehoif <- compute_HOIF_general_all_U(
   Vector_2 = epsilon_Y_1,
   weight = A,
   basis = X,
-  Split = 1
+  order = m_all,
+  Split= 1
 )
 hoif_1_part_ehoif <- compute_HOIF_general_part_U(
   Vector_1 = epsilon_A_1,
   Vector_2 = epsilon_Y_1,
   weight = A,
   basis = X,
-  order = m,
-  split = 1
+  order = m_part,
+  Split= 1
 )
 
 
@@ -485,15 +584,16 @@ hoif_0_all_shoif <- compute_HOIF_general_all_U(
   Vector_2 = epsilon_Y_0,
   weight = 1 - A,
   basis = X,
-  Split = 0
+  order = m_all,
+  Split= 0
 )
 hoif_0_part_shoif <- compute_HOIF_general_part_U(
   Vector_1 = epsilon_A_0,
   Vector_2 = epsilon_Y_0,
   weight = 1 - A,
   basis = X,
-  order = m,
-  split = 0
+  order = m_part,
+ Split= 0
 )
 
 hoif_0_all_ehoif <- compute_HOIF_general_all_U(
@@ -501,7 +601,8 @@ hoif_0_all_ehoif <- compute_HOIF_general_all_U(
   Vector_2 = epsilon_Y_0,
   weight = 1 - A,
   basis = X,
-  Split = 1
+  order = m_all,
+  Split= 1
 )
 
 hoif_0_part_ehoif <- compute_HOIF_general_part_U(
@@ -509,8 +610,8 @@ hoif_0_part_ehoif <- compute_HOIF_general_part_U(
   Vector_2 = epsilon_Y_0,
   weight = 1 - A,
   basis = X,
-  order = m,
-  split = 1
+  order = m_part,
+  Split= 1
 )
 
 

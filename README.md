@@ -4,7 +4,7 @@
 
 ### **Update - 2024-12-16** 📢
 
-The higher-order (now up to **the fifth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the **"HOIF_function"** folder. 
+The higher-order (now up to **the sixth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the **"HOIF_function"** folder. 
 
 ---
 

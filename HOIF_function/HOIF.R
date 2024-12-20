@@ -5,7 +5,7 @@ library("SMUT") # for efficient matrix multiplication via eigenMapMatMult()
 
 ################################################################################
 # Main function using "all" U-statistics definition! i.e. (i_1 \ne i_2 \ne ... \ne i_m)
-# Computes and return 4's estimators from 2-th HOIF to 5-th HOIF estimator. Higher order code is coming soon!
+# Computes and return 4's estimators from 2-th HOIF to 6-th HOIF estimator. Higher order code is coming soon!
 # Vector_1: a n-dimensional vector containing the treatment residuals (like (Aa -1) )
 # Vector_2: a n-dimensional vector containing the outcome residuals (like (y - b),here no A-weighted)
 # weight : a n-dimensional vector containing the treatment for Weight-ed Gram matrix ( like A or (1-A) )

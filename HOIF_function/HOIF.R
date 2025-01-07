@@ -352,6 +352,122 @@ calculate_u_statistics_six <- function(Vector_1, Vector_2, A1, A2 , A3, A4, A5) 
   # Return a list of U-statistics
   return( results_list)
 }
+                          calculate_u_statistics <- function(A) {
+    # Ensure input matrix is square
+    n <- nrow(A)
+    if (ncol(A) != n) {
+      stop("Input matrix must be square")
+    }
+    
+    # 预计算基础矩阵运算
+    no_diag_A <- no_diag(A)
+    t_no_diag_A <- t(no_diag_A)
+    
+    # 预计算常用的矩阵乘法结果
+    AA <- eigenMapMatMult(no_diag_A, no_diag_A)  # 常用的 A*A
+    t_AA <- t(AA)  # 转置后的 A*A
+    
+    # 预计算常用的 Hadamard 积
+    A_tA_hadamard <- hadamard(no_diag_A, t_no_diag_A)  # A ⊙ A^T
+    
+    # Kernel matrices 计算
+    Ker2 <- A
+    Ker3 <- AA
+    
+    # 预计算 Ker4 相关的中间结果
+    diag_AA_A <- diag_col_sum(t_no_diag_A * no_diag_A)
+    A_tA_A_hadamard <- hadamard(hadamard(A, t(A)), A)
+    
+    # Ker4 计算
+    Ker4_temp <- eigenMapMatMult(no_diag(Ker3), no_diag_A) -
+      eigenMapMatMult(A, diag_AA_A) +
+      A_tA_A_hadamard
+    Ker4 <- Ker4_temp
+    diag(Ker4) <- diag(eigenMapMatMult(Ker3, no_diag_A))
+    
+    # 预计算 Ker5 相关的常用表达式
+    AAA <- eigenMapMatMult(AA, no_diag_A)
+    diag_AAA <- diag(diag(AAA))
+    AA_A_hadamard <- hadamard(A_tA_hadamard, eigenMapMatMult(no_diag_A, no_diag_A))
+    A_AA_hadamard <- hadamard(hadamard(no_diag_A, no_diag_A), eigenMapMatMult(t_no_diag_A, t_no_diag_A))
+    
+    # Ker5 计算
+    Ker5_temp <- eigenMapMatMult(no_diag(Ker4), no_diag_A) - 
+      eigenMapMatMult(no_diag_A, diag_AAA) +
+      AA_A_hadamard +
+      A_AA_hadamard -
+      eigenMapMatMult(no_diag(AA), diag(diag(AA))) +
+      eigenMapMatMult(no_diag_A, no_diag(hadamard(hadamard(no_diag_A, t_no_diag_A), no_diag_A))) +
+      hadamard(AA, hadamard(t_no_diag_A, no_diag_A))
+    
+    Ker5 <- Ker5_temp
+    diag(Ker5) <- diag(eigenMapMatMult(Ker4, no_diag_A))
+    
+    # 预计算 Sub matrices 相关的常用表达式
+    diag_Ker5 <- diag_Mat(Ker5)
+    no_diag_Ker4 <- no_diag(Ker4)
+    t_no_diag_Ker4 <- t(no_diag_Ker4)
+    AA_tA <- eigenMapMatMult(t_no_diag_A, t_no_diag_A)
+    AA_A <- eigenMapMatMult(no_diag_A, no_diag_A)
+    
+    # Sub matrices 计算
+    Sub_6_2 <- eigenMapMatMult(no_diag_A, diag_Ker5) -
+      hadamard(A_tA_hadamard, Ker4) -
+      hadamard(hadamard(no_diag_A, t_no_diag_Ker4), no_diag_A) -
+      hadamard(hadamard(no_diag_A, AA_tA), AA_A) +
+      hadamard(no_diag_A, eigenMapMatMult(hadamard(no_diag_A, t_no_diag_A), hadamard(no_diag_A, t_no_diag_A)))
+    
+    # 预计算 Sub_6_3 相关的常用表达式
+    diag_Ker4 <- diag_Mat(Ker4)
+    AA_diag_Ker4 <- eigenMapMatMult(AA, diag_Ker4)
+    AA_tA_AA <- hadamard(hadamard(AA, t_no_diag_A), AA_A)
+    
+    Sub_6_3 <- AA_diag_Ker4 -
+      AA_tA_AA -
+      hadamard(hadamard(AA, t_AA), no_diag_A) -
+      eigenMapMatMult(no_diag_A, hadamard(A_tA_hadamard, AA_A)) +
+      hadamard(eigenMapMatMult(hadamard(no_diag_A, t_no_diag_A), hadamard(no_diag_A, t_no_diag_A)), no_diag_A) -
+      eigenMapMatMult(no_diag_A, hadamard(hadamard(no_diag_A, no_diag_A), t_AA)) +
+      hadamard(t_no_diag_A, eigenMapMatMult(hadamard(no_diag_A, no_diag_A), hadamard(no_diag_A, no_diag_A)))
+    
+    # 预计算 Sub_6_4 相关的常用表达式
+    AA_diag <- diag_Mat(AA)
+    Ker4_AA_diag <- eigenMapMatMult(Ker4, AA_diag)
+    Ker4_AtA <- hadamard(Ker4, A_tA_hadamard)
+    
+    Sub_6_4 <- Ker4_AA_diag -
+      Ker4_AtA -
+      eigenMapMatMult(no_diag_A, hadamard(AA, hadamard(t_no_diag_A, no_diag_A))) +
+      hadamard(no_diag_A, eigenMapMatMult(A_tA_hadamard, hadamard(t_no_diag_A, no_diag_A))) -
+      eigenMapMatMult(no_diag_A, no_diag(eigenMapMatMult(no_diag_A, hadamard(hadamard(no_diag_A, t_no_diag_A), no_diag_A)))) +
+      eigenMapMatMult(diag_col_sum(hadamard(t_no_diag_A, no_diag_A)), hadamard(hadamard(no_diag_A, t_no_diag_A), no_diag_A)) -
+      hadamard(hadamard(hadamard(hadamard(no_diag_A, t_no_diag_A), no_diag_A), t_no_diag_A), no_diag_A)
+    
+    # Final Kernel matrix
+    Ker6 <- eigenMapMatMult(no_diag(Ker5), no_diag_A) - Sub_6_2 - Sub_6_3 - Sub_6_4
+    # Calculate U-statistics
+    Ker2 <- no_diag(Ker2)
+    Ker3 <- no_diag(Ker3)
+    Ker4 <- no_diag(Ker4)
+    Ker5 <- no_diag(Ker5)
+    Ker6 <- no_diag(Ker6)
+    
+    U2_all <- sum(Ker2) / (n * (n - 1))
+    U3_all <- sum(Ker3) / (n * (n - 1) * (n - 2))
+    U4_all <- sum(Ker4) / (n * (n - 1) * (n - 2) * (n - 3))
+    U5_all <- sum(Ker5) / (n * (n - 1) * (n - 2) * (n - 3) * (n - 4))
+    U6_all <- sum(Ker6) / (n * (n - 1) * (n - 2) * (n - 3) * (n - 4) * (n - 5))
+    
+    
+    # Return a list of U-statistics
+    return(list(
+      U2 = U2_all,
+      U3 = U3_all,
+      U4 = U4_all,
+      U5 = U5_all,
+      U6 = U6_all
+    ))
+}
 ################################################################################
 # Helper funciton for compute_HOIF_general_part_U() and compute_HOIF_general_all_U()
 # subtract, add, combine function for list

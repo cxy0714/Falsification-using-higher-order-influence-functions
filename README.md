@@ -69,9 +69,6 @@ epsilon_Y_0 <- Y - Y_pred_0
 
 m <- 6
 
-devtools::load_all()
-
-
 
 # old implementation for sHOIF compute_HOIF_general_all_U(), note here a minus in epsilon_A to match the library(HOIF)
 hoif_1_all_shoif <- compute_HOIF_general_all_U(

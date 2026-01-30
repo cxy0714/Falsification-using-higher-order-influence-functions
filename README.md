@@ -2,7 +2,7 @@
 ---
 
 ### **Update - 2026-01-30** 📢
-A fatal typo in the eHOIF implementation inside [**HOIF_function/**](HOIF_function) has been fixed and rigorously verified via full enumeration.
+A fatal typo in the eHOIF implementation inside [**HOIF_function/**](HOIF_function/HOIF.R) has been fixed and rigorously verified via full enumeration.
 
 Function signature remains **unchanged**.  
 The only new feature is an optional random seed for sample splitting (default = 42).
@@ -18,7 +18,7 @@ oh god, what kind of shit code did I write a year ago...
 
 ### **Update - 2024-12-19** 📢
 
-The higher-order (now up to **the sixth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the [**HOIF_function/**](HOIF_function) folder. 
+The higher-order (now up to **the sixth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the [**HOIF_function/**](HOIF_function/HOIF.R). 
 
 ---
 
@@ -26,7 +26,7 @@ The higher-order (now up to **the sixth** order) computation code for the HOIF (
 
 ### **Update - 2024-12-16** 📢
 
-The higher-order (now up to **the fifth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the [**HOIF_function/**](HOIF_function) folder. 
+The higher-order (now up to **the fifth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the [**HOIF_function/**](HOIF_function/HOIF.R). 
 
 ---
 

@@ -14,6 +14,7 @@ library("SMUT") # for efficient matrix multiplication via eigenMapMatMult()
 # Split: a logistic variable, default value is 0.
 #        Split== 1 means using sample Splitto compute the Omega_hat (eHOIF),
 #        Split== 0 means using whole sample to compute the Omega_hat (sHOIF).
+# seed: the seed of sample splititng  for reproducibility.
 ################################################################################
 compute_HOIF_general_all_U <- function(Vector_1, Vector_2, weight, basis, order = 6, Split= 0, seed = 42) {
   n <- length(Vector_1)

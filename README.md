@@ -10,7 +10,7 @@ The only new feature is an optional random seed for sample splitting (default = 
 For better performance, elegant API, arbitrary-order support (including >6), and faster execution, please use the new dedicated R package:  
 [**HOIF**](https://github.com/cxy0714/HOIF) → `devtools::install_github("cxy0714/HOIF")`
 
-(⚠️But note: when order > 7, complexity exceeds O(n⁴))
+(⚠️But note: when order > 7, complexity exceeds O(n⁴), see Section 4.1 of<sup>1</sup>.)
 
 oh god, what kind of shit code did I write a year ago... 
 
@@ -58,3 +58,7 @@ Here we provide the code to reproduce the analysis described in:
 
 # Correspondence
 If you have any questions, comments, or discover an error, please contact Kerollos Wanis at knwanis@gmail.com.
+
+## References
+
+<sup>1</sup>  Chen, X., Zhang, R., & Liu, L. (2025). *On computing and the complexity of computing higher-order U-statistics, exactly*. arXiv:2508.12627.

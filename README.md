@@ -2,7 +2,7 @@
 ---
 
 ### **Update - 2026-01-30** 📢
-A fatal typo in the eHOIF implementation inside [**HOIF_function/**](HOIF_function/HOIF.R) has been fixed and rigorously verified via full enumeration.
+A fatal typo in the eHOIF implementation inside [**HOIF_function/HOIF.R**](HOIF_function/HOIF.R) has been fixed and rigorously verified via full enumeration.
 
 Function signature remains **unchanged**.  
 The only new feature is an optional random seed for sample splitting (default = 42).
@@ -10,15 +10,13 @@ The only new feature is an optional random seed for sample splitting (default = 
 For better performance, elegant API, arbitrary-order support (including >6), and faster execution, please use the new dedicated R package:  
 [**HOIF**](https://github.com/cxy0714/HOIF) → `devtools::install_github("cxy0714/HOIF")`
 
-(⚠️But note: when order > 7, complexity exceeds O(n⁴), see Section 4.1 of<sup>1</sup>.)
-
-oh god, what kind of shit code did I write a year ago... 
+Oh god, what kind of shit code did I write a year ago... 
 
 ---
 
 ### **Update - 2024-12-19** 📢
 
-The higher-order (now up to **the sixth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the [**HOIF_function/**](HOIF_function/HOIF.R). 
+The higher-order (now up to **the sixth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the [**HOIF_function/HOIF.R**](HOIF_function/HOIF.R). 
 
 ---
 
@@ -26,7 +24,7 @@ The higher-order (now up to **the sixth** order) computation code for the HOIF (
 
 ### **Update - 2024-12-16** 📢
 
-The higher-order (now up to **the fifth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the [**HOIF_function/**](HOIF_function/HOIF.R). 
+The higher-order (now up to **the fifth** order) computation code for the HOIF (sHOIF/eHOIF) estimator has been updated and is now available in the [**HOIF_function/HOIF.R**](HOIF_function/HOIF.R). 
 
 ---
 
